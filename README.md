@@ -23,4 +23,4 @@ Using **lazy.nvim** drop the following into your config, or do the equivalent fo
 Enter visual mode (`v` or `V`) and select a column of numbers or durations and run:
 
 - `:SumColumn` to sum numbers
-- `:SumTimes` to sum durations
+- `:SumTimes` to sum durations, in the format HHMM (no `:`)
