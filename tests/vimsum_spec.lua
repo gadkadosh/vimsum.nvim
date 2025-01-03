@@ -54,7 +54,7 @@ describe("vimsum.sum_numbers", function()
     end)
 end)
 
-describe("vimsum.sum_numbers", function()
+describe("vimsum.sum_durations", function()
     local sum_durations = require("vimsum")._sum_durations
 
     it("0 minutes", function()
