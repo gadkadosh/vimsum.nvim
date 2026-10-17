@@ -2,29 +2,42 @@ name: Tests
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   unit_tests:
-    name: unit tests
-    runs-on: ${{ matrix.os }}
+    name: Neovim ${{ matrix.neovim }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Nightly is an early warning, not a release compatibility gate.
+    continue-on-error: ${{ matrix.neovim == 'nightly' }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04]
-        rev: [nightly]
-        include:
-          - os: ubuntu-22.04
+        neovim: [stable, nightly]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: rhysd/action-setup-vim@v1
+      - uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7 # v1.6.1
         with:
           neovim: true
-          version: ${{ matrix.rev }}
+          version: ${{ matrix.neovim }}
 
-      - name: Prepare
+      - name: Prepare Plenary
+        env:
+          PLENARY_REV: 74b06c6c75e4eeb3108ec01852001636d85a932b
         run: |
-          git clone --depth 1 https://github.com/nvim-lua/plenary.nvim ../plenary.nvim
+          git init ../plenary.nvim
+          git -C ../plenary.nvim fetch --depth 1 https://github.com/nvim-lua/plenary.nvim "$PLENARY_REV"
+          git -C ../plenary.nvim checkout --detach FETCH_HEAD
 
       - name: Run tests
         run: |
