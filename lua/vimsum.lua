@@ -1,4 +1,4 @@
-M = {}
+local M = {}
 
 ---Sum up a list of durations and return hours and minutes
 ---@param durations string[]
