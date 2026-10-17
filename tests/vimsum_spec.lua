@@ -150,7 +150,27 @@ describe("vimsum.sum_durations", function()
         assert.equals(3, minutes)
     end)
 
-    for _, invalid in ipairs({ "", " ", "oops", "1:30", "-130", "+130", "1.30", "0130 ", string.rep("9", 400) }) do
+    for _, case in ipairs({
+        { values = { "1:30", "0:45" }, hours = 2, minutes = 15 },
+        { values = { " 1:30\t", "\t0045 " }, hours = 2, minutes = 15 },
+        { values = { " 0130 ", "\t45\t" }, hours = 2, minutes = 15 },
+        { values = { "0001:30", "100:00", "1" }, hours = 101, minutes = 31 },
+        { values = { "0:00", "00" }, hours = 0, minutes = 0 },
+        { values = { "0175", "0:75" }, hours = 3, minutes = 30 },
+        { values = { "9007199254740990:59", "0:01" }, hours = 9007199254740991, minutes = 0 },
+    }) do
+        it("accepts duration formats: " .. table.concat(case.values, ", "), function()
+            local hours, minutes = sum_durations(case.values)
+            assert.equals(case.hours, hours)
+            assert.equals(case.minutes, minutes)
+        end)
+    end
+
+    for _, invalid in ipairs({
+        "", " ", "\t", "oops", "-130", "+130", "1.30", "1:3", "1:030", ":30", "1:",
+        "1:30:00", "1 :30", "1: 30", "01 30", "-1:30", "+1:30", "1:3x", "1.5:30",
+        string.rep("9", 400), string.rep("9", 400) .. ":00",
+    }) do
         it("rejects invalid duration " .. string.format("%q", invalid), function()
             local hours, invalid_line = sum_durations({ "0130", invalid, "0045" })
             assert.is_nil(hours)
@@ -175,6 +195,8 @@ describe("vimsum.sum_durations", function()
         { "1" .. string.rep("0", 308) .. "00" },
         { "900719925474099100", "0100" },
         { "900719925474099159", "01" },
+        { "9007199254740992:00" },
+        { "9007199254740991:59", "0:01" },
     }) do
         it("rejects an hour total beyond the exact-integer range: " .. table.concat(durations, ", "), function()
             local hours, invalid_line = sum_durations(durations)
