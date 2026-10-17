@@ -1,5 +1,5 @@
 local M = {}
--- Keep whole hours exact in Lua numbers and safe for integer formatting.
+-- LuaJIT has no math.maxinteger; doubles represent every integer exactly only up to 2^53 - 1.
 local MAX_DURATION_HOURS = 2 ^ 53 - 1
 
 ---@param value string|number
