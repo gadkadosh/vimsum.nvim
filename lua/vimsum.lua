@@ -60,6 +60,15 @@ local function sum_numbers(numbers)
     return sum
 end
 
+local function show_result(args, label, total, display_total)
+    if args.bang then
+        vim.fn.append(args.line2, args.line1 .. "-" .. args.line2 .. " " .. label .. ": " .. total)
+    else
+        local message = label .. ": " .. (display_total or total) .. " · " .. (args.line2 - args.line1 + 1) .. " entries"
+        vim.api.nvim_echo({ { message } }, true, {})
+    end
+end
+
 M.setup = function()
     vim.api.nvim_create_user_command("SumTimes", function(args)
         if args.line1 == args.line2 then
@@ -75,8 +84,8 @@ M.setup = function()
         end
 
         local total = string.format("%02d%02d", hours, minutes)
-        vim.fn.append(args.line2, args.line1 .. "-" .. args.line2 .. " Total: " .. total)
-    end, { range = true })
+        show_result(args, "Total", total, string.format("%02d:%02d", hours, minutes))
+    end, { range = true, bang = true })
 
     vim.api.nvim_create_user_command("SumColumn", function(args)
         if args.line1 == args.line2 then
@@ -90,8 +99,8 @@ M.setup = function()
                 .. ": expected a finite number and total", vim.log.levels.ERROR)
             return
         end
-        vim.fn.append(args.line2, args.line1 .. "-" .. args.line2 .. " Sum: " .. sum)
-    end, { range = true })
+        show_result(args, "Sum", sum)
+    end, { range = true, bang = true })
 end
 
 -- For internal testing
