@@ -23,7 +23,7 @@ Run `:SumColumn` to sum numbers, or `:SumTimes` to sum durations written as `HHM
 
 The total and entry count appear in Neovim's message area without changing the buffer. Use `:messages` to see the result again.
 
-Add `!` (`:SumColumn!` or `:SumTimes!`) to append the total below the selection instead. This preserves the original insertion behavior and output format.
+Add `!` (`:SumColumn!` or `:SumTimes!`) to append the same result below the selection instead.
 
 ### Example
 
@@ -45,5 +45,5 @@ Run `:SumTimes!` instead to append the total:
 ```text
 0130
 0045
-1-2 Total: 0215
+Total: 02:15 · 2 entries
 ```

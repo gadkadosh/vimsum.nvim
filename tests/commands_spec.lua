@@ -97,14 +97,14 @@ for _, suffix in ipairs({ "", "!" }) do
         end
 
         local cases = {
-            { command = "SumTimes", lines = { "0130", "0045" }, total = "Total: 0215", display = "Total: 02:15" },
-            { command = "SumTimes", lines = { "0030", "0030" }, total = "Total: 0100", display = "Total: 01:00" },
-            { command = "SumTimes", lines = { "7711", "8822" }, total = "Total: 16533", display = "Total: 165:33" },
+            { command = "SumTimes", lines = { "0130", "0045" }, total = "Total: 02:15 · 2 entries" },
+            { command = "SumTimes", lines = { "0030", "0030" }, total = "Total: 01:00 · 2 entries" },
+            { command = "SumTimes", lines = { "7711", "8822" }, total = "Total: 165:33 · 2 entries" },
             { command = "SumTimes", lines = { "900719925474099000", "0100" },
-                total = "Total: 900719925474099100", display = "Total: 9007199254740991:00" },
-            { command = "SumColumn", lines = { "1.5", "-2" }, total = "Sum: -0.5", display = "Sum: -0.5" },
-            { command = "SumColumn", lines = { "0", "0" }, total = "Sum: 0", display = "Sum: 0" },
-            { command = "SumColumn", lines = { "2", "1", "3" }, total = "Sum: 6", display = "Sum: 6" },
+                total = "Total: 9007199254740991:00 · 2 entries" },
+            { command = "SumColumn", lines = { "1.5", "-2" }, total = "Sum: -0.5 · 2 entries" },
+            { command = "SumColumn", lines = { "0", "0" }, total = "Sum: 0 · 2 entries" },
+            { command = "SumColumn", lines = { "2", "1", "3" }, total = "Sum: 6 · 3 entries" },
         }
 
         for _, case in ipairs(cases) do
@@ -127,13 +127,13 @@ for _, suffix in ipairs({ "", "!" }) do
                     end
 
                     if suffix == "!" then
-                        table.insert(lines, last + 1, "2-" .. last .. " " .. case.total)
+                        table.insert(lines, last + 1, case.total)
                         assert.is_true(vim.bo[buffer].modified)
                         assert.equals("", vim.fn.execute("messages"))
                     else
                         assert.equals(changedtick, vim.api.nvim_buf_get_changedtick(buffer))
                         assert.is_false(vim.bo[buffer].modified)
-                        assert.equals("\n" .. case.display .. " · " .. #case.lines .. " entries", vim.fn.execute("messages"))
+                        assert.equals("\n" .. case.total, vim.fn.execute("messages"))
                     end
                     assert.same(lines, vim.api.nvim_buf_get_lines(buffer, 0, -1, false))
                     assert.same({}, notifications)

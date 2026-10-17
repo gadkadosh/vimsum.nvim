@@ -60,11 +60,11 @@ local function sum_numbers(numbers)
     return sum
 end
 
-local function show_result(args, label, total, display_total)
+local function show_result(args, label, total)
+    local message = label .. ": " .. total .. " · " .. (args.line2 - args.line1 + 1) .. " entries"
     if args.bang then
-        vim.fn.append(args.line2, args.line1 .. "-" .. args.line2 .. " " .. label .. ": " .. total)
+        vim.fn.append(args.line2, message)
     else
-        local message = label .. ": " .. (display_total or total) .. " · " .. (args.line2 - args.line1 + 1) .. " entries"
         vim.api.nvim_echo({ { message } }, true, {})
     end
 end
@@ -83,8 +83,7 @@ M.setup = function()
             return
         end
 
-        local total = string.format("%02d%02d", hours, minutes)
-        show_result(args, "Total", total, string.format("%02d:%02d", hours, minutes))
+        show_result(args, "Total", string.format("%02d:%02d", hours, minutes))
     end, { range = true, bang = true })
 
     vim.api.nvim_create_user_command("SumColumn", function(args)
