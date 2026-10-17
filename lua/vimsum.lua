@@ -1,5 +1,7 @@
 local M = {}
 
+---@param value string|number
+---@return number|nil
 local function finite_number(value)
     local number = tonumber(value)
     if number and number == number and math.abs(number) ~= math.huge then
