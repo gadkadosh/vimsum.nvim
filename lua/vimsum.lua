@@ -1,4 +1,6 @@
 local M = {}
+-- LuaJIT has no math.maxinteger; doubles represent every integer exactly only up to 2^53 - 1.
+local MAX_DURATION_HOURS = 2 ^ 53 - 1
 
 ---@param value string|number
 ---@return number|nil
@@ -9,7 +11,7 @@ local function finite_number(value)
     end
 end
 
----Sum durations, or return nil and the index of the first invalid line.
+---Sum durations, or return nil and the first line with invalid input or an unrepresentable total.
 ---@param durations string[]
 ---@return number|nil, number
 local function sum_durations(durations)
@@ -28,20 +30,19 @@ local function sum_durations(durations)
         else
             h = 0
         end
-        if h == nil then
+        minutes = minutes + m
+        local carry = math.floor(minutes / 60)
+        if h == nil or h > MAX_DURATION_HOURS - hours - carry then
             return nil, line
         end
-        hours = hours + h
-        minutes = minutes + m
+        hours = hours + h + carry
+        minutes = minutes % 60
     end
-
-    hours = hours + math.floor(minutes / 60)
-    minutes = minutes % 60
 
     return hours, minutes
 end
 
----Sum numbers, or return nil and the index of the first invalid line.
+---Sum numbers, or return nil and the first line with invalid input or a non-finite total.
 ---@param numbers (number|string)[]
 ---@return number|nil, number|nil
 local function sum_numbers(numbers)
@@ -51,7 +52,10 @@ local function sum_numbers(numbers)
         if number == nil then
             return nil, line
         end
-        sum = sum + number
+        sum = finite_number(sum + number)
+        if sum == nil then
+            return nil, line
+        end
     end
     return sum
 end
@@ -66,7 +70,7 @@ M.setup = function()
         local hours, minutes = sum_durations(times)
         if hours == nil then
             vim.notify("Invalid duration on line " .. (args.line1 + minutes - 1)
-                .. ": expected a finite HHMM duration (digits only)", vim.log.levels.ERROR)
+                .. ": expected digits only and a total of at most 9007199254740991 hours", vim.log.levels.ERROR)
             return
         end
 
@@ -83,7 +87,7 @@ M.setup = function()
         local sum, invalid_line = sum_numbers(nums)
         if sum == nil then
             vim.notify("Invalid number on line " .. (args.line1 + invalid_line - 1)
-                .. ": expected a finite number", vim.log.levels.ERROR)
+                .. ": expected a finite number and total", vim.log.levels.ERROR)
             return
         end
         vim.fn.append(args.line2, args.line1 .. "-" .. args.line2 .. " Sum: " .. sum)

@@ -46,6 +46,14 @@ describe("vimsum.sum_numbers", function()
         assert.equals(2.5, sum)
     end)
 
+    for _, value in ipairs({ "1e308", "-1e308" }) do
+        it("rejects a non-finite running total from " .. value, function()
+            local sum, invalid_line = sum_numbers({ value, value })
+            assert.is_nil(sum)
+            assert.equals(2, invalid_line)
+        end)
+    end
+
     for _, invalid in ipairs({ "bla", "", " ", "nan", "inf", "1e999" }) do
         it("rejects invalid number " .. string.format("%q", invalid), function()
             local sum, invalid_line = sum_numbers({ "1", invalid, "3" })
@@ -147,6 +155,31 @@ describe("vimsum.sum_durations", function()
             local hours, invalid_line = sum_durations({ "0130", invalid, "0045" })
             assert.is_nil(hours)
             assert.equals(2, invalid_line)
+        end)
+    end
+
+    it("accepts the largest exact hour total", function()
+        local hours, minutes = sum_durations({ "900719925474099000", "0100" })
+        assert.equals(9007199254740991, hours)
+        assert.equals(0, minutes)
+    end)
+
+    it("accepts a minute carry into the largest exact hour total", function()
+        local hours, minutes = sum_durations({ "900719925474099059", "01" })
+        assert.equals(9007199254740991, hours)
+        assert.equals(0, minutes)
+    end)
+
+    for _, durations in ipairs({
+        { "900719925474099200" },
+        { "1" .. string.rep("0", 308) .. "00" },
+        { "900719925474099100", "0100" },
+        { "900719925474099159", "01" },
+    }) do
+        it("rejects an hour total beyond the exact-integer range: " .. table.concat(durations, ", "), function()
+            local hours, invalid_line = sum_durations(durations)
+            assert.is_nil(hours)
+            assert.equals(#durations, invalid_line)
         end)
     end
 
