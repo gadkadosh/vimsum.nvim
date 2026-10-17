@@ -18,19 +18,18 @@ local function sum_durations(durations)
     local hours = 0
     local minutes = 0
 
-    for line, i in ipairs(durations) do
-        if not i:match("^%d+$") then
-            return nil, line
+    for line, value in ipairs(durations) do
+        value = vim.trim(value)
+        local h, m = value:match("^(%d+):(%d%d)$")
+        if h == nil then
+            if not value:match("^%d+$") then
+                return nil, line
+            end
+            h = #value > 2 and value:sub(1, -3) or "0"
+            m = value:sub(-2)
         end
-        local len = string.len(i)
-        local m = tonumber(string.sub(i, len - 1, len))
-        local h
-        if len > 2 then
-            h = finite_number(string.sub(i, 1, len - 2))
-        else
-            h = 0
-        end
-        minutes = minutes + m
+        h = finite_number(h)
+        minutes = minutes + tonumber(m)
         local carry = math.floor(minutes / 60)
         if h == nil or h > MAX_DURATION_HOURS - hours - carry then
             return nil, line
@@ -84,7 +83,7 @@ M.setup = function()
         local hours, minutes = sum_durations(times)
         if hours == nil then
             vim.notify("Invalid duration on line " .. (args.line1 + minutes - 1)
-                .. ": expected digits only and a total of at most 9007199254740991 hours", vim.log.levels.ERROR)
+                .. ": expected digits or H:MM and a total of at most 9007199254740991 hours", vim.log.levels.ERROR)
             return
         end
 

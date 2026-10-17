@@ -19,7 +19,9 @@ Using **lazy.nvim** drop the following into your config, or do the equivalent fo
 
 Select two or more lines using linewise visual mode (`V`), with one number or duration per line.
 
-Run `:SumColumn` to sum numbers, or `:SumTimes` to sum durations written as `HHMM` (e.g. `0130` for 1 hour 30 minutes).
+Run `:SumColumn` to sum numbers, or `:SumTimes` to sum durations. Choose the command explicitly; VimSum does not infer the input type.
+
+Durations accept either digits only (`0130`) or `H:MM` (`1:30`), both meaning 1 hour 30 minutes. You can mix formats in a selection, and surrounding spaces and tabs are ignored. In digits-only input, the last two digits are minutes (`45` means 45 minutes); in `H:MM`, hours need at least one digit and minutes exactly two. Hours can exceed 24. Minute components above 59 currently carry into hours (`0175` or `1:75` becomes `02:15`).
 
 The total and entry count appear in Neovim's message area without changing the buffer. Use `:messages` to see the result again.
 
@@ -43,7 +45,7 @@ Select lines with `V`, then use your chosen binding to see the total.
 Given these lines:
 
 ```text
-0130
+1:30
 0045
 ```
 
@@ -56,7 +58,7 @@ Total: 02:15 · 2 entries
 Run `:SumTimes!` instead to append the total:
 
 ```text
-0130
+1:30
 0045
 Total: 02:15 · 2 entries
 ```

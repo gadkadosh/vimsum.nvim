@@ -32,9 +32,11 @@ for _, suffix in ipairs({ "", "!" }) do
         end)
 
         for _, case in ipairs({
-            { command = "SumTimes", invalid = "", expected = "digits only and a total of at most 9007199254740991 hours" },
-            { command = "SumTimes", invalid = "1:30", expected = "digits only and a total of at most 9007199254740991 hours" },
+            { command = "SumTimes", invalid = "", expected = "digits or H:MM and a total of at most 9007199254740991 hours" },
+            { command = "SumTimes", invalid = "1:3", expected = "digits or H:MM and a total of at most 9007199254740991 hours" },
+            { command = "SumTimes", invalid = " 1: 30 ", expected = "digits or H:MM and a total of at most 9007199254740991 hours" },
             { command = "SumColumn", invalid = "oops", expected = "a finite number and total" },
+            { command = "SumColumn", invalid = "1:30", expected = "a finite number and total" },
             { command = "SumColumn", invalid = "", expected = "a finite number and total" },
         }) do
             it(case.command .. " rejects " .. string.format("%q", case.invalid) .. " without changing the buffer", function()
@@ -75,6 +77,7 @@ for _, suffix in ipairs({ "", "!" }) do
             { command = "SumColumn", lines = { "-1e308", "-1e308" }, line = 3 },
             { command = "SumTimes", lines = { "900719925474099100", "0100" }, line = 3 },
             { command = "SumTimes", lines = { "900719925474099159", "01" }, line = 3 },
+            { command = "SumTimes", lines = { "9007199254740991:59", "0:01" }, line = 3 },
             { command = "SumTimes", lines = { "1" .. string.rep("0", 308) .. "00", "0100" }, line = 2 },
         }) do
             it(case.command .. " rejects an unrepresentable total for " .. case.lines[1], function()
@@ -86,7 +89,7 @@ for _, suffix in ipairs({ "", "!" }) do
                 assert.same(lines, vim.api.nvim_buf_get_lines(buffer, 0, -1, false))
                 local kind = case.command == "SumTimes" and "duration" or "number"
                 local expected = case.command == "SumTimes"
-                    and "digits only and a total of at most 9007199254740991 hours"
+                    and "digits or H:MM and a total of at most 9007199254740991 hours"
                     or "a finite number and total"
                 assert.same({ {
                     message = "Invalid " .. kind .. " on line " .. case.line .. ": expected " .. expected,
@@ -98,6 +101,10 @@ for _, suffix in ipairs({ "", "!" }) do
 
         local cases = {
             { command = "SumTimes", lines = { "0130", "0045" }, total = "Total: 02:15 · 2 entries" },
+            { command = "SumTimes", lines = { "1:30", "0:45" }, total = "Total: 02:15 · 2 entries" },
+            { command = "SumTimes", lines = { " \t1:30 ", " 0045\t" }, total = "Total: 02:15 · 2 entries" },
+            { command = "SumTimes", lines = { "\t0130 ", " 0045 " }, total = "Total: 02:15 · 2 entries" },
+            { command = "SumTimes", lines = { "0175", "0:75" }, total = "Total: 03:30 · 2 entries" },
             { command = "SumTimes", lines = { "0030", "0030" }, total = "Total: 01:00 · 2 entries" },
             { command = "SumTimes", lines = { "7711", "8822" }, total = "Total: 165:33 · 2 entries" },
             { command = "SumTimes", lines = { "900719925474099000", "0100" },
