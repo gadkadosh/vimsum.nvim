@@ -60,6 +60,10 @@ local function sum_numbers(numbers)
     return sum
 end
 
+---@param args vim.api.keyset.create_user_command.command_args
+---@param label string
+---@param total string|number
+---@return nil
 local function show_result(args, label, total)
     local message = label .. ": " .. total .. " · " .. (args.line2 - args.line1 + 1) .. " entries"
     if args.bang then
@@ -69,6 +73,7 @@ local function show_result(args, label, total)
     end
 end
 
+---@return nil
 M.setup = function()
     vim.api.nvim_create_user_command("SumTimes", function(args)
         if args.line1 == args.line2 then
