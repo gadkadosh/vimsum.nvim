@@ -25,6 +25,19 @@ The total and entry count appear in Neovim's message area without changing the b
 
 Add `!` (`:SumColumn!` or `:SumTimes!`) to append the same result below the selection instead.
 
+### Optional keymaps
+
+VimSum does not define any keymaps. Choose your own bindings; for example, add this `keys` field to the **lazy.nvim** plugin spec above:
+
+```lua
+keys = {
+    { "<leader>st", ":SumTimes<CR>", mode = "x", desc = "Sum durations" },
+    { "<leader>sc", ":SumColumn<CR>", mode = "x", desc = "Sum numbers" },
+},
+```
+
+Select lines with `V`, then use your chosen binding to see the total.
+
 ### Example
 
 Given these lines:
