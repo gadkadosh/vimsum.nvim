@@ -28,8 +28,12 @@ local function sum_durations(durations)
             h = #value > 2 and value:sub(1, -3) or "0"
             m = value:sub(-2)
         end
+        m = tonumber(m)
+        if m > 59 then
+            return nil, line
+        end
         h = finite_number(h)
-        minutes = minutes + tonumber(m)
+        minutes = minutes + m
         local carry = math.floor(minutes / 60)
         if h == nil or h > MAX_DURATION_HOURS - hours - carry then
             return nil, line
@@ -83,7 +87,8 @@ M.setup = function()
         local hours, minutes = sum_durations(times)
         if hours == nil then
             vim.notify("Invalid duration on line " .. (args.line1 + minutes - 1)
-                .. ": expected digits or H:MM and a total of at most 9007199254740991 hours", vim.log.levels.ERROR)
+                .. ": expected digits or H:MM with minutes 00-59"
+                .. " and a total of at most 9007199254740991 hours", vim.log.levels.ERROR)
             return
         end
 

@@ -126,10 +126,10 @@ describe("vimsum.sum_durations", function()
         assert.equals(minutes, 33)
     end)
 
-    it("more than 60 minutes corrected to add an hour", function()
-        local hours, minutes = sum_durations({ "7777" })
-        assert.equals(hours, 78)
-        assert.equals(minutes, 17)
+    it("carries summed minutes above 59 into hours", function()
+        local hours, minutes = sum_durations({ "59", "59" })
+        assert.equals(1, hours)
+        assert.equals(58, minutes)
     end)
 
     it("add hours and minutes, sum larger than 100 hours", function()
@@ -156,7 +156,7 @@ describe("vimsum.sum_durations", function()
         { values = { " 0130 ", "\t45\t" }, hours = 2, minutes = 15 },
         { values = { "0001:30", "100:00", "1" }, hours = 101, minutes = 31 },
         { values = { "0:00", "00" }, hours = 0, minutes = 0 },
-        { values = { "0175", "0:75" }, hours = 3, minutes = 30 },
+        { values = { "0159", "0:59" }, hours = 2, minutes = 58 },
         { values = { "9007199254740990:59", "0:01" }, hours = 9007199254740991, minutes = 0 },
     }) do
         it("accepts duration formats: " .. table.concat(case.values, ", "), function()
@@ -169,6 +169,7 @@ describe("vimsum.sum_durations", function()
     for _, invalid in ipairs({
         "", " ", "\t", "oops", "-130", "+130", "1.30", "1:3", "1:030", ":30", "1:",
         "1:30:00", "1 :30", "1: 30", "01 30", "-1:30", "+1:30", "1:3x", "1.5:30",
+        "60", "99", "160", "175", "0175", "7777", "0:60", "0:75", "1:60", "1:99", " 0175\t", "\t1:75 ",
         string.rep("9", 400), string.rep("9", 400) .. ":00",
     }) do
         it("rejects invalid duration " .. string.format("%q", invalid), function()
@@ -205,13 +206,13 @@ describe("vimsum.sum_durations", function()
         end)
     end
 
-    it("Many durations", function()
+    it("sums many durations with repeated minute carries", function()
         local durations = {}
         for i = 1, 9 do
-            durations[i] = string.rep(i, 4)
+            durations[i] = i .. "15"
         end
         local hours, minutes = sum_durations(durations)
-        assert.equals(hours, 503)
-        assert.equals(minutes, 15)
+        assert.equals(47, hours)
+        assert.equals(15, minutes)
     end)
 end)

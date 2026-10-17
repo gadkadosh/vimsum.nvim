@@ -5,6 +5,7 @@ for _, suffix in ipairs({ "", "!" }) do
         local notifications
         local original_print
         local messages
+        local duration_expectation = "digits or H:MM with minutes 00-59 and a total of at most 9007199254740991 hours"
 
         before_each(function()
             buffer = vim.api.nvim_create_buf(false, false)
@@ -32,9 +33,15 @@ for _, suffix in ipairs({ "", "!" }) do
         end)
 
         for _, case in ipairs({
-            { command = "SumTimes", invalid = "", expected = "digits or H:MM and a total of at most 9007199254740991 hours" },
-            { command = "SumTimes", invalid = "1:3", expected = "digits or H:MM and a total of at most 9007199254740991 hours" },
-            { command = "SumTimes", invalid = " 1: 30 ", expected = "digits or H:MM and a total of at most 9007199254740991 hours" },
+            { command = "SumTimes", invalid = "", expected = duration_expectation },
+            { command = "SumTimes", invalid = "1:3", expected = duration_expectation },
+            { command = "SumTimes", invalid = " 1: 30 ", expected = duration_expectation },
+            { command = "SumTimes", invalid = "60", expected = duration_expectation },
+            { command = "SumTimes", invalid = "175", expected = duration_expectation },
+            { command = "SumTimes", invalid = "0175", expected = duration_expectation },
+            { command = "SumTimes", invalid = "0:60", expected = duration_expectation },
+            { command = "SumTimes", invalid = "1:99", expected = duration_expectation },
+            { command = "SumTimes", invalid = " \t0:75 ", expected = duration_expectation },
             { command = "SumColumn", invalid = "oops", expected = "a finite number and total" },
             { command = "SumColumn", invalid = "1:30", expected = "a finite number and total" },
             { command = "SumColumn", invalid = "", expected = "a finite number and total" },
@@ -42,9 +49,13 @@ for _, suffix in ipairs({ "", "!" }) do
             it(case.command .. " rejects " .. string.format("%q", case.invalid) .. " without changing the buffer", function()
                 local lines = { "outside range", "0130", case.invalid, "0045", "outside range" }
                 vim.api.nvim_buf_set_lines(buffer, 0, -1, false, lines)
+                vim.bo[buffer].modified = false
+                local changedtick = vim.api.nvim_buf_get_changedtick(buffer)
 
                 vim.cmd("2,4" .. case.command .. suffix)
 
+                assert.equals(changedtick, vim.api.nvim_buf_get_changedtick(buffer))
+                assert.is_false(vim.bo[buffer].modified)
                 assert.same(lines, vim.api.nvim_buf_get_lines(buffer, 0, -1, false))
                 local kind = case.command == "SumTimes" and "duration" or "number"
                 assert.same({ {
@@ -89,7 +100,7 @@ for _, suffix in ipairs({ "", "!" }) do
                 assert.same(lines, vim.api.nvim_buf_get_lines(buffer, 0, -1, false))
                 local kind = case.command == "SumTimes" and "duration" or "number"
                 local expected = case.command == "SumTimes"
-                    and "digits or H:MM and a total of at most 9007199254740991 hours"
+                    and duration_expectation
                     or "a finite number and total"
                 assert.same({ {
                     message = "Invalid " .. kind .. " on line " .. case.line .. ": expected " .. expected,
@@ -104,7 +115,7 @@ for _, suffix in ipairs({ "", "!" }) do
             { command = "SumTimes", lines = { "1:30", "0:45" }, total = "Total: 02:15 · 2 entries" },
             { command = "SumTimes", lines = { " \t1:30 ", " 0045\t" }, total = "Total: 02:15 · 2 entries" },
             { command = "SumTimes", lines = { "\t0130 ", " 0045 " }, total = "Total: 02:15 · 2 entries" },
-            { command = "SumTimes", lines = { "0175", "0:75" }, total = "Total: 03:30 · 2 entries" },
+            { command = "SumTimes", lines = { "0159", "0:59" }, total = "Total: 02:58 · 2 entries" },
             { command = "SumTimes", lines = { "0030", "0030" }, total = "Total: 01:00 · 2 entries" },
             { command = "SumTimes", lines = { "7711", "8822" }, total = "Total: 165:33 · 2 entries" },
             { command = "SumTimes", lines = { "900719925474099000", "0100" },
@@ -112,6 +123,7 @@ for _, suffix in ipairs({ "", "!" }) do
             { command = "SumColumn", lines = { "1.5", "-2" }, total = "Sum: -0.5 · 2 entries" },
             { command = "SumColumn", lines = { "0", "0" }, total = "Sum: 0 · 2 entries" },
             { command = "SumColumn", lines = { "2", "1", "3" }, total = "Sum: 6 · 3 entries" },
+            { command = "SumColumn", lines = { "175", "25" }, total = "Sum: 200 · 2 entries" },
         }
 
         for _, case in ipairs(cases) do
