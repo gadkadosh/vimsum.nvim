@@ -41,17 +41,18 @@ describe("vimsum.sum_numbers", function()
         assert.equals(sum, 127)
     end)
 
-    it("non number", function()
-        ---@diagnostic disable-next-line: assign-type-mismatch
-        local sum = sum_numbers({ "bla" })
-        assert.equals(sum, 0)
+    it("accepts numeric strings from buffer lines", function()
+        local sum = sum_numbers({ "1.5", "-2", " 3 " })
+        assert.equals(2.5, sum)
     end)
 
-    it("includes a non number", function()
-        ---@diagnostic disable-next-line: assign-type-mismatch
-        local sum = sum_numbers({ 1, "bla", 3 })
-        assert.equals(sum, 4)
-    end)
+    for _, invalid in ipairs({ "bla", "", " ", "nan", "inf", "1e999" }) do
+        it("rejects invalid number " .. string.format("%q", invalid), function()
+            local sum, invalid_line = sum_numbers({ "1", invalid, "3" })
+            assert.is_nil(sum)
+            assert.equals(2, invalid_line)
+        end)
+    end
 end)
 
 describe("vimsum.sum_durations", function()
@@ -134,6 +135,20 @@ describe("vimsum.sum_durations", function()
         assert.equals(hours, 77)
         assert.equals(minutes, 33)
     end)
+
+    it("accepts a single digit as minutes", function()
+        local hours, minutes = sum_durations({ "1", "2" })
+        assert.equals(0, hours)
+        assert.equals(3, minutes)
+    end)
+
+    for _, invalid in ipairs({ "", " ", "oops", "1:30", "-130", "+130", "1.30", "0130 ", string.rep("9", 400) }) do
+        it("rejects invalid duration " .. string.format("%q", invalid), function()
+            local hours, invalid_line = sum_durations({ "0130", invalid, "0045" })
+            assert.is_nil(hours)
+            assert.equals(2, invalid_line)
+        end)
+    end
 
     it("Many durations", function()
         local durations = {}

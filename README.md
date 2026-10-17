@@ -21,6 +21,8 @@ Select two or more lines using linewise visual mode (`V`), with one number or du
 
 Run `:SumColumn` to sum numbers, or `:SumTimes` to sum durations written as `HHMM` (e.g. `0130` for 1 hour 30 minutes).
 
+Every selected line must be valid. Invalid input (including blank lines) reports its line number and leaves the buffer unchanged; `:SumColumn` no longer silently skips invalid lines. Numbers must be finite. Durations must contain only digits; one- or two-digit values represent minutes, and excess minutes carry into hours.
+
 ### Example
 
 Given these lines:
